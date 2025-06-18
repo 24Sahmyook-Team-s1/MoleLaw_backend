@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/lawmatedb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: dev
+    password: devpass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 또는 create, validate 등 선택
+    show-sql: true
+
+  # 서버 포트 (선택)
+  server:
+    port: 8080
