@@ -10,6 +10,3 @@ spring:
       ddl-auto: update  # 또는 create, validate 등 선택
     show-sql: true
 
-  # 서버 포트 (선택)
-  server:
-    port: 8080
