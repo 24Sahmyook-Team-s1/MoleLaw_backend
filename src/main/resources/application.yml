@@ -19,3 +19,5 @@ spring:
       tagsSorter: alpha
       tryItOutEnabled: true
 
+openai:
+  api-key: ${OPENAI_API_KEY}
