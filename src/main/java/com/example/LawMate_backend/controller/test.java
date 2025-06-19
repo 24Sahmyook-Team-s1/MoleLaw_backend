@@ -13,5 +13,6 @@ public class test {
     public String ask(@RequestBody String request) {
         return "예시 응답입니다";
     }
+
 }
 
