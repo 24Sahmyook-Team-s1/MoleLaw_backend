@@ -4,11 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -17,18 +15,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ExtractKeyword {
 
-    @Value("${openai.api.key}")
+    @Value("${openai.api-key}")
     private String apiKey;
 
-    private final WebClient.Builder webClientBuilder;
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public List<String> extractKeywords(String userInput) {
-        WebClient webClient = webClientBuilder
-                .baseUrl("https://api.openai.com/v1/chat/completions")
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
         String prompt = String.format("""
             다음 문장에서 법적 판례 검색에 유용한 핵심 키워드 3~5개를 JSON 배열로 출력하세요.
             문장: "%s"
@@ -44,16 +37,22 @@ public class ExtractKeyword {
                 "temperature", 0.3
         );
 
-        Map<String, Object> response = webClient.post()
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                .block();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(apiKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
         try {
-            String content = (String) ((Map<String, Object>) ((Map<String, Object>) ((List<?>) response.get("choices")).get(0)).get("message")).get("content");
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    "https://api.openai.com/v1/chat/completions",
+                    requestEntity,
+                    Map.class
+            );
 
-            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> body = response.getBody();
+            String content = (String) ((Map<String, Object>) ((Map<String, Object>) ((List<?>) body.get("choices")).get(0)).get("message")).get("content");
+
             return objectMapper.readValue(content, new TypeReference<List<String>>() {});
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,4 +60,3 @@ public class ExtractKeyword {
         }
     }
 }
-

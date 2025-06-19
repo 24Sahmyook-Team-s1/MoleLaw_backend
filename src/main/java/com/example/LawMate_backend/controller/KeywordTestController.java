@@ -2,6 +2,7 @@ package com.example.LawMate_backend.controller;
 
 import com.example.LawMate_backend.ExtractKeyword;
 import com.example.LawMate_backend.QueryRequest;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ public class KeywordTestController {
 
     private final ExtractKeyword extractKeyword;
 
+    @Operation(summary = "GPT 키워드 추출", description = "질문을 입력하면 GPT가 키워드를 추출합니다.")
     @PostMapping("/keywords")
     public ResponseEntity<List<String>> getKeywords(@RequestBody QueryRequest request) {
         List<String> keywords = extractKeyword.extractKeywords(request.getQuery());
