@@ -21,4 +21,4 @@ spring:
 
 openai:
   api:
-    key: ${open_api_key}
+    key:
