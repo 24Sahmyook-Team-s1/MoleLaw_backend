@@ -37,21 +37,6 @@ com.project.lawmate
   ```http
   Authorization: Bearer <ACCESS_TOKEN>
   ```
-
----
-
-## 🧾 공통 API 응답 포맷
-
-```json
-{
-  "status": 200,
-  "message": "성공",
-  "data": {
-    ...
-  }
-}
-```
-
 - 예외는 `@ControllerAdvice` 전역 처리
 - `ApiResponse<T>` 형태로 통일
 
@@ -120,7 +105,6 @@ law:
 
 - 코드 작성 전 `feature` 브랜치 생성 후 PR
 - 기능 완료 후 `dev` 브랜치로 merge
-- 주 1회 정기 미팅 & 코드 리뷰
 - 주요 API 또는 로직은 **Swagger 문서화 or README에 예시 추가**
 
 ---
