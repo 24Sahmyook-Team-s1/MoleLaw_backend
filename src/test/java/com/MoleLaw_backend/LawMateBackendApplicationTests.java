@@ -1,4 +1,4 @@
-package com.example.LawMate_backend;
+package com.MoleLaw_backend;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

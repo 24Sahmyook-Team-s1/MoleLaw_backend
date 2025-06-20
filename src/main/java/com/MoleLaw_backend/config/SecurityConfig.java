@@ -1,4 +1,4 @@
-package com.example.LawMate_backend.config;
+package com.MoleLaw_backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

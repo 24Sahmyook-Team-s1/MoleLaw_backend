@@ -1,4 +1,4 @@
-package com.example.LawMate_backend;
+package com.MoleLaw_backend;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

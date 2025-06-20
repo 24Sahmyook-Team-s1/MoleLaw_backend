@@ -1,7 +1,7 @@
-package com.example.LawMate_backend.controller;
+package com.MoleLaw_backend.controller;
 
-import com.example.LawMate_backend.ExtractKeyword;
-import com.example.LawMate_backend.QueryRequest;
+import com.MoleLaw_backend.ExtractKeyword;
+import com.MoleLaw_backend.QueryRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

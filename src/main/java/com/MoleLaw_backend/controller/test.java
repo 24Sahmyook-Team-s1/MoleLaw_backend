@@ -1,4 +1,4 @@
-package com.example.LawMate_backend.controller;
+package com.MoleLaw_backend.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

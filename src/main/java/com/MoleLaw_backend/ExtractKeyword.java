@@ -1,4 +1,4 @@
-package com.example.LawMate_backend;
+package com.MoleLaw_backend;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

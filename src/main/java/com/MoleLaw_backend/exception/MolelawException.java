@@ -1,4 +1,4 @@
-package com.example.LawMate_backend.exception;
+package com.MoleLaw_backend.exception;
 
 import lombok.Getter;
 
