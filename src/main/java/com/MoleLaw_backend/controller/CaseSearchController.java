@@ -16,7 +16,7 @@ public class CaseSearchController {
     private final CaseSearchService caseSearchService;
 
     @GetMapping
-    public List<PrecedentInfo> getPrecedents(@RequestParam("query") PrecedentSearchRequest query) {
-        return caseSearchService.searchCases(query);
+    public List<PrecedentInfo> getPrecedents(@ModelAttribute PrecedentSearchRequest request) {
+        return caseSearchService.searchCases(request);
     }
 }
