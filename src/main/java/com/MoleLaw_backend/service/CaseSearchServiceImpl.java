@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.service;
 
 import com.MoleLaw_backend.dto.PrecedentInfo;
+import com.MoleLaw_backend.dto.PrecedentSearchRequest;
 import com.MoleLaw_backend.dto.PrecedentSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +23,7 @@ public class CaseSearchServiceImpl implements CaseSearchService {
     private static final String BASE_URL = "http://www.law.go.kr";
 
     @Override
-    public List<PrecedentInfo> searchCases(String query) {
+    public List<PrecedentInfo> searchCases(PrecedentSearchRequest request) {
         PrecedentSearchResponse response = webClientBuilder.build()
                 .get()
                 .uri(uriBuilder -> uriBuilder
@@ -32,7 +33,7 @@ public class CaseSearchServiceImpl implements CaseSearchService {
                         .queryParam("OC", oc)
                         .queryParam("target", "prec")
                         .queryParam("type", "JSON")
-                        .queryParam("query", query)
+                        .queryParam("query", request.getQuery())
                         .build())
                 .retrieve()
                 .bodyToMono(PrecedentSearchResponse.class)
