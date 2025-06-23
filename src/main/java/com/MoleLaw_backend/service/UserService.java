@@ -6,6 +6,9 @@ import com.MoleLaw_backend.dto.AuthResponse;
 import com.MoleLaw_backend.dto.LoginRequest;
 import com.MoleLaw_backend.dto.SignupRequest;
 import com.MoleLaw_backend.config.JwtUtil;
+import com.MoleLaw_backend.dto.UserResponse;
+import com.MoleLaw_backend.exception.ErrorCode;
+import com.MoleLaw_backend.exception.MolelawException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -45,5 +48,13 @@ public class UserService {
         String token = jwtUtil.generateToken(user.getEmail());
         return new AuthResponse(token);
     }
+
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
+        return new UserResponse(user);
+    }
+
+
 
 }
