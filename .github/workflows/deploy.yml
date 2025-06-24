@@ -19,6 +19,9 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: 🔧 Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+
     - name: 🛠️ Build project with Gradle
       run: ./gradlew clean build -x test
 
