@@ -1,0 +1,43 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # 메인 브랜치에 push될 때 배포
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: ✅ Checkout code
+      uses: actions/checkout@v3
+
+    - name: 📦 Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: 🛠️ Build project with Gradle
+      run: ./gradlew clean build -x test
+
+    - name: 🔐 Add SSH key
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.PRIVATE_KEY }}
+
+    - name: 🚀 Deploy via SCP
+      run: |
+        scp -o StrictHostKeyChecking=no -r ./build/libs/*.jar ${{ secrets.EC2_USER }}@${{ secrets.HOST_IP }}:/home/${{ secrets.EC2_USER }}/app.jar
+
+    - name: 🐳 SSH & Restart Docker container
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.HOST_IP }} << 'EOF'
+        docker stop molelaw || true
+        docker rm molelaw || true
+        docker run -d --name molelaw -p 8080:8080 \
+          -v /home/${USER}/.env:/app/.env \
+          -e SPRING_PROFILES_ACTIVE=prod \
+          openjdk:21 java -jar /home/${USER}/app.jar
+        EOF
