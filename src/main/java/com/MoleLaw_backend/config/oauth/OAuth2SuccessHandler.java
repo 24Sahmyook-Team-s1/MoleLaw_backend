@@ -37,8 +37,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         clearAuthenticationAttributes(request);
 
+        response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"token\": \"" + token + "\"}");
-        response.getWriter().close(); // flushBuffer 대신 명시적 종료
+        response.getWriter().flush();  // 추가
+        response.getWriter().close();
     }
 }

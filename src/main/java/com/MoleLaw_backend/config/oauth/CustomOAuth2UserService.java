@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,27 +23,55 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        System.out.println("✅ OAuth2 attributes: " + attributes);
+        final String email;
+        final String nickname;
 
-        String email = (String) attributes.get("email");
+        if ("kakao".equals(registrationId)) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+            Map<String, Object> profile = kakaoAccount != null ? (Map<String, Object>) kakaoAccount.get("profile") : null;
 
-        if (email == null) {
-            throw new OAuth2AuthenticationException("이메일을 가져올 수 없습니다.");
+            if (kakaoAccount != null && kakaoAccount.get("email") != null) {
+                email = (String) kakaoAccount.get("email");
+            } else {
+                throw new OAuth2AuthenticationException("카카오 계정에서 이메일을 찾을 수 없습니다.");
+            }
+
+            nickname = (profile != null && profile.get("nickname") != null)
+                    ? (String) profile.get("nickname")
+                    : "unknown";
+
+        } else {
+            email = (String) attributes.get("email");
+            nickname = (String) attributes.getOrDefault("name", "unknown");
+
+            if (email == null) {
+                throw new OAuth2AuthenticationException("이메일을 가져올 수 없습니다.");
+            }
         }
 
-        userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = User.builder()
-                    .email(email)
-                    .password("") // 소셜 로그인은 비번 없음
-                    .build();
-            return userRepository.save(newUser);
-        });
+        // ✅ 이메일 + provider 기준으로 사용자 조회
+        User user = userRepository.findByEmailAndProvider(email, registrationId)
+                .orElseGet(() -> userRepository.save(
+                        User.builder()
+                                .email(email)
+                                .nickname(nickname)
+                                .password("") // 소셜 로그인은 패스워드 없음
+                                .provider(registrationId)
+                                .build()
+                ));
+
+        // 반환할 사용자 정보
+        Map<String, Object> customAttributes = Map.of(
+                "email", user.getEmail(),
+                "nickname", user.getNickname()
+        );
 
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
-                attributes,
+                customAttributes,
                 "email"
         );
     }

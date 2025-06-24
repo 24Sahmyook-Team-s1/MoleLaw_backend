@@ -6,6 +6,7 @@ import com.MoleLaw_backend.config.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,8 +14,22 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import java.net.URI;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -44,11 +59,47 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
+                        .tokenEndpoint(token -> token
+                                .accessTokenResponseClient(customAccessTokenResponseClient())
+                        )
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+    @Bean
+    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> customAccessTokenResponseClient() {
+        DefaultAuthorizationCodeTokenResponseClient client = new DefaultAuthorizationCodeTokenResponseClient();
+
+        client.setRequestEntityConverter(request -> {
+            ClientRegistration registration = request.getClientRegistration();
+
+            // ✅ Spring Security가 계산해준 redirectUri 사용
+            String redirectUri = request.getAuthorizationExchange()
+                    .getAuthorizationRequest()
+                    .getRedirectUri();
+
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add(OAuth2ParameterNames.GRANT_TYPE, "authorization_code");
+            body.add(OAuth2ParameterNames.CLIENT_ID, registration.getClientId());
+            body.add(OAuth2ParameterNames.CLIENT_SECRET, registration.getClientSecret());
+            body.add(OAuth2ParameterNames.CODE, request.getAuthorizationExchange()
+                    .getAuthorizationResponse().getCode());
+            body.add(OAuth2ParameterNames.REDIRECT_URI, redirectUri);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+            URI uri = URI.create(registration.getProviderDetails().getTokenUri());
+
+            return new RequestEntity<>(body, headers, HttpMethod.POST, uri);
+        });
+
+        return client;
+    }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
