@@ -2,8 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
@@ -13,39 +12,39 @@ jobs:
       - name: ✅ Checkout code
         uses: actions/checkout@v3
 
-      - name: 📦 Set up Java
+      - name: 📦 Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 21
 
-      - name: 🔧 Grant execute permission for gradlew
+      - name: 🔧 Grant permission for Gradle
         run: chmod +x ./gradlew
 
       - name: 🛠️ Build with Gradle
         run: ./gradlew clean build -x test
 
-      - name: 📤 Copy JAR to EC2
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.EC2_IP }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "./build/libs/*.jar"
-          target: "/home/${{ secrets.EC2_USER }}/app.jar"
+      - name: 🐳 Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_USER }}/molelaw-app:latest .
 
-      - name: 🚀 Deploy to EC2 via SSH
+      - name: 🔐 Login to DockerHub
+        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+      - name: 📤 Push image to DockerHub
+        run: docker push ${{ secrets.DOCKER_USER }}/molelaw-app:latest
+
+      - name: 🚀 Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_IP }}
+          host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          key: ${{ secrets.PRIVATE_KEY }}
           script: |
+            docker pull ${{ secrets.DOCKER_USER }}/molelaw-app:latest
             docker stop molelaw || true
             docker rm molelaw || true
             docker run -d \
-              -v /home/ubuntu/.env:/app/.env \
-              -p 8080:8080 \
-              -e SPRING_PROFILES_ACTIVE=prod \
               --name molelaw \
-              openjdk:21 java -jar /home/ubuntu/app.jar
+              --env-file /home/ubuntu/.env \
+              -p 8080:8080 \
+              ${{ secrets.DOCKER_USER }}/molelaw-app:latest
