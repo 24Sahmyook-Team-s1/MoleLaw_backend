@@ -10,37 +10,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: ✅ Checkout code
-      uses: actions/checkout@v3
+      - name: ✅ Checkout code
+        uses: actions/checkout@v3
 
-    - name: 📦 Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '21'
+      - name: 📦 Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: 🔧 Grant execute permission for gradlew
-      run: chmod +x ./gradlew
+      - name: 🔧 Grant execute permission for gradlew
+        run: chmod +x ./gradlew
 
-    - name: 🛠️ Build project with Gradle
-      run: ./gradlew clean build -x test
+      - name: 🛠️ Build with Gradle
+        run: ./gradlew clean build -x test
 
-    - name: 🔐 Add SSH key
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.PRIVATE_KEY }}
+      - name: 📤 Copy JAR to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "./build/libs/*.jar"
+          target: "/home/${{ secrets.EC2_USER }}/app.jar"
 
-    - name: 📤 Upload JAR to EC2
-      run: |
-        scp -o StrictHostKeyChecking=no ./build/libs/*.jar ${{ secrets.EC2_USER }}@${{ secrets.HOST_IP }}:/home/${{ secrets.EC2_USER }}/app.jar
-
-    - name: 🐳 SSH & Restart Docker container
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.HOST_IP }} << EOF
-        docker stop molelaw || true
-        docker rm molelaw || true
-        docker run -d --name molelaw -p 8080:8080 \
-          -v /home/${{ secrets.EC2_USER }}/.env:/app/.env \
-          -e SPRING_PROFILES_ACTIVE=prod \
-          openjdk:21 java -jar /home/${{ secrets.EC2_USER }}/app.jar
-        EOF
+      - name: 🚀 Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker stop molelaw || true
+            docker rm molelaw || true
+            docker run -d \
+              -v /home/ubuntu/.env:/app/.env \
+              -p 8080:8080 \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              --name molelaw \
+              openjdk:21 java -jar /home/ubuntu/app.jar
