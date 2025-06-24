@@ -9,15 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/answer")
+@RequiredArgsConstructor
 public class AnswerController {
 
     private final FinalAnswer finalAnswer;
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> getFinalAnswer(@RequestBody QueryRequest request) {
-        Map<String, Object> result = finalAnswer.processQuery(request.getQuery());
-        return ResponseEntity.ok(result);
+    public ResponseEntity<Map<String, Object>> getAnswer(@RequestBody QueryRequest request) {
+        Map<String, Object> response = finalAnswer.getFinalAnswer(request.getQuery());
+        return ResponseEntity.ok(response);
     }
 }

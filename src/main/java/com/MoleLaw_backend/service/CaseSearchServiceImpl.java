@@ -33,7 +33,7 @@ public class CaseSearchServiceImpl implements CaseSearchService {
                         .queryParam("OC", oc)
                         .queryParam("target", "prec")
                         .queryParam("type", "JSON")
-                        .queryParam("query", request.getQuery())
+                        .queryParam("JO", request.getQuery())
                         .build())
                 .retrieve()
                 .bodyToMono(PrecedentSearchResponse.class)
