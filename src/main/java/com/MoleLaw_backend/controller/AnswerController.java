@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/answer")
 @RequiredArgsConstructor
@@ -16,8 +14,8 @@ public class AnswerController {
     private final FinalAnswer finalAnswer;
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> getAnswer(@RequestBody QueryRequest request) {
-        Map<String, Object> response = finalAnswer.getFinalAnswer(request.getQuery());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<String> getAnswer(@RequestBody QueryRequest request) {
+        String gptResponse = finalAnswer.getFinalAnswer(request.getQuery());
+        return ResponseEntity.ok(gptResponse);
     }
 }
