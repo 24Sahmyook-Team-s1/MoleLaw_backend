@@ -21,3 +21,6 @@ spring:
 
 openai:
   api-key: ${OPENAI_API_KEY}
+
+openlaw:
+  api-key: ${OC_KEY}
