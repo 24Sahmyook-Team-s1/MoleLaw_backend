@@ -101,13 +101,6 @@ public class ChatService {
      * ✅ 새로운 채팅방 생성 + GPT로 제목 + 답변 동시 생성 + 저장
      */
     public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
-//        // 1. GPT로 제목 생성
-//        String title;
-//        try {
-//            title = gptService.generateTitle(request.getContent());
-//        } catch (Exception e) {
-//            title = "제목 없음";
-//        }
         // 1. 키워드와 제목 추출
         KeywordAndTitleResponse KeywordAndTitle = extractKeyword.extractKeywords(request.getContent());
 
