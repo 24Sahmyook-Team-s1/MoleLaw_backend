@@ -16,7 +16,7 @@ public class AnswerController {
 
     @PostMapping
     public ResponseEntity<AnswerResponse> getAnswer(@RequestBody QueryRequest request) {
-        return ResponseEntity.ok(finalAnswer.getAnswer(request.getQuery()));
+        return ResponseEntity.ok(finalAnswer.getAnswer(request.getQuery(), request.getKeywords()));
     }
 
 }
